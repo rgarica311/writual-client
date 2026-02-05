@@ -18,7 +18,7 @@
     "resolveJsonModule": true,
     "isolatedModules": true,
     "noEmit": true,
-    "jsx": "preserve",
+    "jsx": "react-jsx",
     "incremental": true,
     "noImplicitAny": false,
     "baseUrl": "src",
@@ -28,6 +28,36 @@
       ],
       "@/state/*": [
         "state/*"
+      ],
+      "@/shared/*": [
+        "components/shared/*"
+      ],
+      "@/queries/*": [
+        "queries/*"
+      ],
+      "@/helpers/*": [
+        "helpers/*"
+      ],
+      "@/types/*": [
+        "types/*"
+      ],
+      "@/enums/*": [
+        "enums/*"
+      ],
+      "@/interfaces/*": [
+        "interfaces/*"
+      ],
+      "@/themes/*": [
+        "themes/*"
+      ],
+      "@props/*": [
+        "interfaces/props/*"
+      ], 
+      "@hooks/*": [
+        "hooks/*"
+      ], 
+      "@mutations/*": [
+        "mutations/*"
       ]
     },
     "plugins": [
@@ -43,6 +73,7 @@
     "next-env.d.ts",
     ".next/types/**/*.ts",
     "**/*.ts",
-    "**/*.tsx"
+    "**/*.tsx",
+    ".next/dev/types/**/*.ts"
   ]
 }

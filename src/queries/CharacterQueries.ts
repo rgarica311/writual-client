@@ -1,0 +1,22 @@
+import { gql } from "graphql-request";
+
+export const PROJECT_CHARACTERS_QUERY = gql`
+query GetProjectCharacters($input: ProjectFilters) {
+  getProjectData(input: $input) {
+    id
+    characters {
+      name
+      imageUrl
+      details {
+        version
+        gender
+        age
+        bio
+        need
+        want
+      }
+    }
+  }
+}
+`;
+

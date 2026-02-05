@@ -24,19 +24,11 @@ interface StepTabs {
 
 export const StepTabs: any = ({scenes, handleAddScene, steps}) => {
   const [step, setStep] = React.useState<number>(0)
-  const activeVersion = sceneStore((state) => state.activeVersion)
-  const setActiveVersion = sceneStore((state) => state.setActiveVersion)
   const setActiveStep = sceneStore((state) => state.setActiveStep)
 
-  console.log('debug activeVersion scenes: ', scenes)
-  console.log('debug activeVersion: ', activeVersion)
-
-
-  
   const handleStepChange = (event: React.SyntheticEvent, newValue: number) => {
     event.stopPropagation()
     let step = steps[newValue].stepName
-    console.log('active step: ', step)
     setActiveStep(step)
     setStep(newValue);
 };
@@ -73,23 +65,17 @@ export const StepTabs: any = ({scenes, handleAddScene, steps}) => {
                         {    
                                     
                             scenes.length > 0 
-                                ? scenes.map((scene: any, index: number) => {
-                                    console.log('scenes Act 1 scene: ', scene)
-                                    setActiveVersion(scene.activeVersion)
-                                    //console.log('Scenes Act 1 scene.act: ', scene.act)
-                                    //console.log(`verticalTable index ${index} step: ${step} activeVersion ${activeVersion} stepObj: `, stepObj)
-
-                                    return <SceneCard
+                                ? scenes.map((scene: any, index: number) => (
+                                    <SceneCard
                                             key={index}
                                             step={stepName}
                                             projectId={scene.projectId}
                                             act={scene.act}
                                             newScene={scene.newScene}
                                             number={scene.number}
-                                            locked={scene.lockedVersion}
+                                            activeVersion={scene.activeVersion ?? 1}
                                             versions={scene.versions}/>
-
-                                })
+                                ))
                                 : <Button onClick={handleAddScene}  sx={{width: "300px", height: "50px"}} variant='contained'>Add Scene</Button>
                             
                         }

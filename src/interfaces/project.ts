@@ -1,19 +1,23 @@
 import { ProjectType } from "../enums";
+import { Scene } from "./scene";
 
 export interface Project {
-    id: { type: String },
-    created_date:  { type: String  },
-    modified_date: { type: String },
-    revision:  { type: Number },
-    user: { type: String },
-    sharedWith: { type: [String] },
-    type: { type: String, enum: ProjectType },
-    genre: { type: String },
-    title: { type: String },
-    logline:{ type:  String },
-    budget: { type: Number },
-    time_period: {type: String},
-    similar_projects: [String]
+    id: string;
+    created_date: string;
+    modified_date: string;
+    revision: number;
+    user: string;
+    sharedWith: string[];
+    type: ProjectType;
+    genre: string;
+    title: string;
+    logline: string;
+    budget: number;
+    timePeriod: string;
+    similarProjects: string[];
+    outlineName?: string;
+    poster?: string;
+    scenes: Scene[];
 }
 
 export interface TabPanelProps {

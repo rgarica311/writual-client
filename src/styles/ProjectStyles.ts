@@ -5,8 +5,8 @@ export const projectStyles = {
         height: "56px",
         justifyContent: "space-between",
         alignItems: "center",
-        padding: 1,
-        margin:   0
+        margin:   0,
+        minWidth: "100%"
         //backgroundColor: theme.palette.background.paper
     },
 

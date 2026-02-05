@@ -52,17 +52,16 @@ export const CustomTableHead: React.FC<EnhancedTableProps> = (props: EnhancedTab
     
     const filterStatus = useUserStore((state) => state.filterStatus)
 
-    headerCells.forEach((cell: any) => {
-      columnVisibility[cell.dataIndex] = true
-    })
-
-    console.log('columnVisibility: ', columnVisibility)
-
-    setColumnVisibility(columnVisibility)
+    useEffect(() => {
+      const next = { ...columnVisibility };
+      headerCells.forEach((cell: any) => {
+        next[cell.dataIndex] = true;
+      });
+      setColumnVisibility(next);
+    }, [headerCells])
 
     const createSortHandler =
       (property: any) => (event: any) => {
-        console.log(`test e createSortHandler propert ${property} e }`, event.target.checked)
         if(event.target.checked !== true && event.target.checked !== false) {
           onRequestSort(event, property);
 
@@ -86,10 +85,7 @@ export const CustomTableHead: React.FC<EnhancedTableProps> = (props: EnhancedTab
         zIndex: 2
     }
 
-    console.log('orderby: ', orderBy)
-
     const handleSort = (e, cell) => {
-      //console.log('test e', e.target.checked)
       createSortHandler(cell)
     }
 
@@ -154,9 +150,7 @@ export const CustomTableHead: React.FC<EnhancedTableProps> = (props: EnhancedTab
                                               <Divider/>
                                                                                                       
                                               {
-                                                  Object.keys(filterStatus).map((status: any) => {
-                                                      console.log('status: ', status)
-                                                      return (
+                                                  Object.keys(filterStatus).map((status: any) => (
                                                           <MenuItem key={filterStatus[status].label}>
                                                           <FormControlLabel 
                                                               control={<Checkbox
@@ -165,8 +159,7 @@ export const CustomTableHead: React.FC<EnhancedTableProps> = (props: EnhancedTab
                                                                   defaultChecked/>}
                                                               label={filterStatus[status].label}/>
                                                           </MenuItem>
-                                                      )
-                                                  })
+                                                  ))
                                                       
                                                   
                                               }

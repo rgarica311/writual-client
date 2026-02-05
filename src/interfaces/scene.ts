@@ -7,13 +7,12 @@ export interface Version {
     antithesis: string;
     synthesis: string;
     sceneHeading: string;
+    locked: boolean;
 
 }
 
 export interface Scene  {
-    act: number;
     number?: number;
-    lockedVersion?: number | undefined;
     activeVersion?: number;
     newScene?: boolean;
     newVersion?: boolean;

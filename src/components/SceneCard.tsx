@@ -1,301 +1,462 @@
-import React, { useEffect, useState } from 'react'
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import Card from '@mui/material/Card';
-import CardHeader from '@mui/material/CardHeader';
 import CardContent from '@mui/material/CardContent';
 import { sceneCardStyle } from 'styles';
-import { Box, CardActions, Container, Divider, FormControl, IconButton, InputLabel, MenuItem, Select, SelectChangeEvent, Stack, Tab, Tabs, TextField, Tooltip, Typography } from '@mui/material';
-import EditIcon from '@mui/icons-material/Edit';
-import { CustomTabPanel } from '@/shared/CustomTabPanel';
-import { sceneStore } from '@/state/sceneState';
-import { useTheme } from '@mui/material/styles';
+import {
+  Box,
+  Chip,
+  Divider,
+  FormControl,
+  IconButton,
+  MenuItem,
+  Select,
+  SelectChangeEvent,
+  TextField,
+  Typography,
+  useTheme,
+} from '@mui/material';
 import LockOpenIcon from '@mui/icons-material/LockOpen';
 import LockIcon from '@mui/icons-material/Lock';
-import ls from 'localstorage-slim';
-import AddCircleOutlineIcon from '@mui/icons-material/AddCircleOutline';
+import DeleteIcon from '@mui/icons-material/Delete';
+import AddIcon from '@mui/icons-material/Add';
+import { useProjectSceneMutations } from 'hooks';
 
+const SAVE_DEBOUNCE_MS = 5000;
+const FIELD_CLAMP_SX = {
+  overflow: 'hidden',
+  textOverflow: 'ellipsis',
+  display: '-webkit-box',
+  WebkitLineClamp: 4,
+  WebkitBoxOrient: 'vertical',
+} as const;
 
-const SceneElementWrapper: React.FC<any> = ({ children }) => {
-    return (
-        <Container disableGutters sx={{ padding: 1, height: "calc(100% - 7px)", display: "flex", flexDirection: "column", justifyContent: "space-around", width: "100%" }}>
-            {children}
-        </Container>
-    )
+interface SceneCardProps {
+  number: number;
+  newScene?: boolean;
+  versions: any[];
+  activeVersion?: number | null;
+  act?: number;
+  projectId?: string;
+  step?: string;
+  onDelete?: () => void;
 }
 
-export const SceneCard: React.FC<any> = ({ number, newScene, versions, locked, act, projectId, step}) => {
-    const activeVersion = sceneStore((state) => state.activeVersion)
-    const setActiveVersion = sceneStore((state) => state.setActiveVersion)
-    //const sceneContent = sceneStore((state) => state.sceneContent)
-    //const setSceneContent = sceneStore((state) => state.setSceneContent)
-    const newVersion = sceneStore((state) => state.newVersion)
-    const setNewVersion = sceneStore((state) =>  state.setNewVersion)
-    const versionOptions = sceneStore((state) => state.versionOptions)
-    const setVersionOptions = sceneStore((state) => state.setVersionOptions)
+export const SceneCard: React.FC<SceneCardProps> = ({
+  number,
+  newScene = false,
+  versions,
+  activeVersion,
+  act,
+  projectId,
+  step,
+  onDelete,
+}) => {
+  const initialActiveVersion = Math.max(1, Number(activeVersion ?? 1));
+  const [activeVersionLocal, setActiveVersionLocal] = useState<number>(initialActiveVersion);
+  const [creatingNewVersion, setCreatingNewVersion] = useState(false);
+  const [sceneContent, setSceneContent] = useState<any>({
+    thesis: '',
+    antithesis: '',
+    synthesis: '',
+    synopsis: '',
+    sceneHeading: '',
+  });
+  const saveTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const latestContentRef = useRef<any>({});
+  const saveMetaRef = useRef<{ version: number; newVersion: boolean;}>({
+    version: initialActiveVersion,
+    newVersion: false,
+  });
+  const versionsRef = useRef<any[]>(versions ?? []);
+  const { updateSceneMutation, deleteSceneMutation } = useProjectSceneMutations();
+  const theme = useTheme();
+  const isLocked = false;
 
-    const handleSave = sceneStore((state) => state.handleSave)
+  useEffect(() => {
+    versionsRef.current = Array.isArray(versions) ? versions : [];
+  }, [versions]);
 
-    //const [activeVersion, setActiveVersion ] = useState(0)
-    const [sceneContent, setSceneContent] = useState<any>({})
-    const [ newVersionDisplay, setNewVersionDisplay ] = useState("")
-    const [value, setValue] = useState(0);
-    const theme = useTheme()
+  // Keep local active/locked in sync with props (e.g. after refetch)
+  useEffect(() => {
+    const nextActive = Math.max(1, Number(activeVersion ?? 1));
+    setActiveVersionLocal(nextActive);
+  }, [activeVersion]);
 
-    useEffect(() => {
 
-        console.log('debug scene versionOptions updated: ', versionOptions)
-        
-        if(newVersion) {
-            setTimeout(() => {
-                console.log('debug scene set new version display versionOptions: ', versionOptions)
-                setNewVersionDisplay(versions.length)
 
-                const localVersions: any = ls.get("version")
-                console.log('debug active version localVersions: ', localVersions)
-
-                if(!localVersions) {
-                    console.log('debug active version setting localVersions: ', [{sceneNum: number, activeVersion: versions.length}])
-                    ls.set("version", [{projectId, sceneNum: number, activeVersion: versions.length}])
-                } else {
-                    if(localVersions.some((version: any) => version.sceneNum === number && version.projectId === projectId)) {
-                        let index = localVersions.findIndex((version: any) => version.sceneNum === number)
-                        localVersions[index] = {sceneNum: number, activeVersion: versions.length}
-                    } else {
-                        localVersions.push({sceneNum: number, activeVersion: versions.length})
-                        console.log('debug active version setting localVersions: ', localVersions)
-                    }
-                    
-
-                    ls.set("version", localVersions)
-                }
-                
-                
-            }, 3000)
-        }
-        
-        
-
-    }, [versionOptions.length])
-
-    useEffect(() => {
-        if(newVersion) {
-            console.log('debug scene update new version: ', newVersion)
-
-            let numVersions = versions.length + 1
-            let versionOptions: any = []
-            for(let i = 0; i<numVersions; i++) {
-                versionOptions.push({version: i + 1})
-            }
-            setVersionOptions(versionOptions)
-
-        } else {
-            console.log('debug scene new version update: ', newVersion)
-        }
-    }, [newVersion])
-
-    const handleSceneChange = (e: React.ChangeEvent<HTMLInputElement>, updateKey: string) => {
-        console.log('debug scene update handleSeneChange running args: ', JSON.stringify({newVersion, projectId, number, newVersionDisplay, step}, null, 2))
-        setSceneContent({ ...sceneContent, [updateKey]: e.target.value})
-        handleSave(newVersion, newScene, projectId, number, newVersionDisplay, step)
-
+  // Load content for current active version (or blank for new version draft)
+  useEffect(() => {
+    if (creatingNewVersion) {
+      setSceneContent({
+        thesis: '',
+        antithesis: '',
+        synthesis: '',
+        synopsis: '',
+        sceneHeading: '',
+      });
+      return;
     }
+    const idx = Math.max(0, activeVersionLocal - 1);
+    const details = versionsRef.current[idx] ?? versionsRef.current[0];
+    setSceneContent({
+      version: details?.version ?? activeVersionLocal,
+      thesis: details?.thesis ?? '',
+      antithesis: details?.antithesis ?? '',
+      synthesis: details?.synthesis ?? '',
+      synopsis: details?.synopsis ?? '',
+      sceneHeading: details?.sceneHeading ?? '',
+      step: details?.step ?? step ?? '',
+      act: details?.act ?? act ?? undefined,
+    });
+  }, [activeVersionLocal, creatingNewVersion, step, act]);
 
-    useEffect(() => {
-            console.log(`debug active version ${activeVersion}`)
-            let details = versions[activeVersion]
-            console.log(`debug active version details for scene ${number}: `, details)
-            //const { thesis, antithesis, synthesis, synopsis, sceneHeading, step, act, version } = details
-            setSceneContent({
-                version: details?.version ? details.version : "",
-                thesis: details?.thesis ? details.thesis : "",
-                antithesis: details?.antithesis ? details.antithesis : "",
-                synthesis: details?.synthesis ? details.synthesis : "",
-                synopsis: details?.synopsis ? details.synopsis : "",
-                sceneHeading: details?.sceneHeading ? details.sceneHeading : "",
-                step: details?.step ? details.step : "",
-                act: details?.act ? details.act : ""
-            })
+  useEffect(() => {
+    latestContentRef.current = sceneContent;
+  }, [sceneContent]);
 
-    }, [activeVersion, versions])
+  useEffect(() => {
+    return () => {
+      if (saveTimeoutRef.current) clearTimeout(saveTimeoutRef.current);
+    };
+  }, []);
 
-    const handleVersionChange = (event: SelectChangeEvent) => {
-        console.log('debug scene handleChange version: ', event.target.value)
-        if(!locked) {
-            console.log('set active version: ', event.target.value)
-            setActiveVersion(parseInt(event.target.value));
+  const scheduleSave = () => {
+    if (isLocked || !projectId) return;
+    const versionToSave = activeVersionLocal || 1;
+    saveMetaRef.current = {
+      version: versionToSave,
+      newVersion: creatingNewVersion
+    };
+    if (saveTimeoutRef.current) clearTimeout(saveTimeoutRef.current);
+    saveTimeoutRef.current = setTimeout(() => {
+      saveTimeoutRef.current = null;
+      const content = latestContentRef.current;
+      const { version: versionToSaveInner, newVersion: newVersionInner } = saveMetaRef.current;
+      const activeVersionIndex = Math.max(0, versionToSaveInner - 1);
+      const baseVersion = versionsRef.current[activeVersionIndex] ?? {};
+      const updatedVersion = {
+        ...baseVersion,
+        thesis: content.thesis ?? '',
+        antithesis: content.antithesis ?? '',
+        synthesis: content.synthesis ?? '',
+        sceneHeading: content.sceneHeading ?? '',
+        synopsis: content.synopsis ?? '',
+        step: content.step ?? '',
+        act: content.act ?? undefined,
+        version: versionToSaveInner,
+      };
+      console.log('updatedVersion: ', updatedVersion)
+      updateSceneMutation.mutate(
+        {
+          projectId: projectId!,
+          number,
+          activeVersion: versionToSaveInner,
+          newVersion: newVersionInner,
+          versions: [updatedVersion],
+        },
+        {
+          onSuccess: () => {
+            if (newVersionInner) setCreatingNewVersion(false);
+          },
         }
-    };
+      );
+    }, SAVE_DEBOUNCE_MS);
+  };
 
-    const handleSceneElChange = (event: React.SyntheticEvent, newValue: number) => {
-        event.stopPropagation()
-        setValue(newValue);
-    };
+  const handleContentChange = (key: string) => (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+    const value = e.target.value;
+    setSceneContent((prev: any) => ({ ...prev, [key]: value }));
+    scheduleSave();
+  };
 
-    function a11yProps(index: number) {
-        return {
-            id: `simple-tab-${index}`,
-            'aria-controls': `simple-tabpanel-${index}`,
-        };
+  const handleVersionChange = (event: SelectChangeEvent<string>) => {
+    if (isLocked) return;
+    const next = parseInt(event.target.value, 10);
+    if (!Number.isFinite(next) || next < 1) return;
+    setCreatingNewVersion(false);
+    setActiveVersionLocal(next);
+
+    // Persist activeVersion switch (no debounce).
+    if (projectId) {
+      const idx = Math.max(0, next - 1);
+      const baseVersion = versionsRef.current[idx] ?? {};
+      updateSceneMutation.mutate({
+        projectId,
+        number,
+        activeVersion: next,
+        newVersion: false,
+        versions: [baseVersion],
+      });
     }
+  };
 
-    return (
+  const versionCount = (Array.isArray(versions) ? versions.length : 0) + (creatingNewVersion ? 1 : 0);
+  const versionOptionsList = useMemo(() => {
+    const count = Math.max(1, versionCount);
+    return Array.from({ length: count }, (_, i) => i + 1);
+  }, [versionCount]);
+  const selectValue = String(activeVersionLocal);
 
-        <Card sx={sceneCardStyle.card}>
+  const handleAddVersionClick = (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    if (isLocked) return;
+    const next = (Array.isArray(versions) ? versions.length : 0) + 1;
+    setCreatingNewVersion(true);
+    setActiveVersionLocal(next);
+  };
 
-            <CardHeader sx={{ height: "50px", width: "max-content", paddingTop: "8px", paddingBottom: "5px", paddingLeft: 2, paddingRight: 2 }}
+  const handleToggleLock = (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    if (!projectId) return;
+   
+    const idx = Math.max(0, activeVersionLocal - 1);
+    const baseVersion = versionsRef.current[idx] ?? {};
+    updateSceneMutation.mutate({
+      projectId,
+      number,
+      activeVersion: activeVersionLocal,
+      newVersion: false,
+      versions: [baseVersion],
+    });
+  };
 
-                action={
-
-                    <Stack sx={{ width: "412px", alignItems: "center" }} spacing={5} direction="row">
-                        
-                        <FormControl size='small' sx={{height: "40px", width: "100%" }}>
-
-                            <TextField disabled={locked >= 0 && locked != null} value={sceneContent.sceneHeading ? sceneContent.sceneHeading : "TBD"} variant='standard' size="small" sx={{ "& .MuiInputBase-root": { height: "100%" }, height: "100%", width: "100%" }} />
-
-                        </FormControl>
-                        
-
-
-                        <FormControl size='small' sx={{ height: "40px", minWidth: "120px" }}>
-                            <Select
-                                disabled={locked != null}
-                                variant='standard'
-                                labelId="demo-simple-select-label"
-                                id="demo-simple-select"
-                                value={newVersion && versionOptions.length > 0 ? newVersionDisplay.toString() : activeVersion.toString()}
-                                onChange={handleVersionChange}
-                                sx={{ height: "100%" }}
-                            >
-                                {
-                                    newVersion && versionOptions.length > 0
-                                        ?   versionOptions.map((el: any, index: number) => {
-                                                return (
-                                                    <MenuItem key={index} value={index.toString()}>{"Version " + el.version}</MenuItem>
-        
-                                                )
-                                            })
-                                        
-                                        :   versions.map((el: any, index: number) => {
-                                                return (
-                                                    <MenuItem key={index} value={index.toString()}>{"Version " + el.version}</MenuItem>
-        
-                                                )
-                                            })
-                                    
-                                }
-
-                            </Select>
-                        </FormControl>
-
-                        <Tooltip title="Add Version">
-                            <IconButton onClick={() => setNewVersion(true)}>
-                                <AddCircleOutlineIcon color="secondary"/> 
-                            </IconButton>
-
-                        </Tooltip>
-                       
-                        
-                    </Stack>
-
-                }
+  return (
+    <Card
+      sx={{
+        ...sceneCardStyle.card,
+        backgroundColor: theme.palette.background.paper,
+        display: 'flex',
+        flexDirection: 'column',
+      }}
+    >
+      {/* Header: Scene title + badges */}
+      <Box
+        sx={{
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+          flexWrap: 'wrap',
+          gap: 1,
+          px: 2,
+          py: 1.5,
+        }}
+      >
+        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, minWidth: 220, flex: 1 }}>
+          <Typography variant="subtitle1" fontWeight={700} component="span">
+            Scene {number}:
+          </Typography>
+          {isLocked ? (
+            <Typography variant="subtitle1" fontWeight={700} component="span" sx={FIELD_CLAMP_SX}>
+              {sceneContent.sceneHeading?.trim() || 'Untitled scene'}
+            </Typography>
+          ) : (
+            <TextField
+              size="small"
+              value={sceneContent.sceneHeading ?? ''}
+              onChange={handleContentChange('sceneHeading')}
+              placeholder="Scene heading"
+              variant="outlined"
+              sx={{ minWidth: 200, flex: 1, '& .MuiInputBase-input': { py: 0.5 } }}
             />
-            <Divider />
-            <CardContent sx={{ height: "calc(100% - 50px)", padding: 0 }}>
-                <SceneElementWrapper>
-                    <Tabs sx={{ "&.MuiTabs-root": { minHeight: "30px" } }} value={value} onChange={handleSceneElChange} aria-label="basic tabs example">
-                        <Tab sx={{ "&.MuiTab-root": { maxHeight: "30px", minHeight: "30px" } }} label="Thesis" {...a11yProps(0)} />
-                        <Tab sx={{ "&.MuiTab-root": { maxHeight: "30px", minHeight: "30px" } }} label="Antithesis" {...a11yProps(1)} />
-                        <Tab sx={{ "&.MuiTab-root": { maxHeight: "30px", minHeight: "30px" } }} label="Synthesis" {...a11yProps(2)} />
-                        <Tab sx={{ "&.MuiTab-root": { maxHeight: "30px", minHeight: "30px" } }} label="Synopsis" {...a11yProps(2)} />
-                    </Tabs>
-                    <CustomTabPanel value={value} index={0}>
-
-                        <TextField
-                            disabled={locked >= 0 && locked != null}
-                            sx={{ "& .MuiInputBase-input": { minHeight: "115px" }, width: "100%" }}
-                            id="outlined-multiline-flexible"
-                            value={sceneContent.thesis}
-                            onChange={(e: React.ChangeEvent<HTMLInputElement>) => handleSceneChange(e, "thesis")}
-                            multiline
-                            maxRows={4}
-                        />
-                    
-                    </CustomTabPanel>
-                    <CustomTabPanel value={value} index={1}>
-                        {
-                            locked === null
-
-                                ? <TextField
-
-                                    sx={{ "& .MuiInputBase-input": { minHeight: "115px" }, width: "100%" }}
-                                    id="outlined-multiline-flexible"
-                                    value={sceneContent.antithesis}
-                                    multiline
-                                    maxRows={4}
-                                />
-                                : <Typography>{sceneContent.antithesis}</Typography>
-
-                        }
-                    </CustomTabPanel>
-                    <CustomTabPanel value={value} index={2}>
-                        {
-                            locked === null
-
-                                ? <TextField
-
-                                    sx={{ "& .MuiInputBase-input": { minHeight: "115px" }, width: "100%" }}
-                                    id="outlined-multiline-flexible"
-                                    value={sceneContent.synthesis}
-                                    multiline
-                                    maxRows={4}
-                                />
-                                : <Typography>{sceneContent.synthesis}</Typography>
-
-                        }
-                    </CustomTabPanel>
-                    <CustomTabPanel value={value} index={3}>
-                        {
-                            locked === null
-
-                                ? <TextField
-
-                                    sx={{ "& .MuiInputBase-input": { minHeight: "115px" }, width: "100%" }}
-                                    id="outlined-multiline-flexible"
-                                    value={sceneContent.synopsis}
-                                    multiline
-                                    maxRows={4}
-                                />
-                                : <Typography>{sceneContent.synopsis}</Typography>
-
-                        }
-                    </CustomTabPanel>
-                </SceneElementWrapper>
-
-                <CardActions sx={{ justifyContent: "space-between", height: "20px" }}>
-                    <Box sx={{ display: "flex", justifyContent: "center", alignItems: "center", height: "20px", width: "20px", borderRadius: "50%", backgroundColor: theme.palette.secondary.main }}>
-                        <Typography sx={{ fontSize: ".8rem", color: theme.palette.secondary.contrastText }}>{number}</Typography>
-                    </Box>
-
-                    <Box>
-                        
-                        {
-                            locked === null
-                                ?   <Tooltip title="lock scene">
-                                        <IconButton>
-                                            <LockOpenIcon color="secondary" />
-                                        </IconButton>
-                                    
-                                    </Tooltip>
-                                :   <Tooltip title="unlock scene">
-                                        <IconButton>
-                                            <LockIcon color="secondary" />
-                                        </IconButton>
-                                    </Tooltip>
-                        }
-
-                    </Box>
-
-                </CardActions>
-            </CardContent>
-        </Card>
-    )
-}
+          )}
+        </Box>
+        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+          <Chip
+            label={`#${number}`}
+            size="small"
+            sx={{
+              backgroundColor: theme.palette.grey[600],
+              color: theme.palette.common.white,
+              fontWeight: 600,
+            }}
+          />
+          <Chip
+            label={`v${activeVersionLocal}`}
+            size="small"
+            sx={{
+              backgroundColor: theme.palette.grey[300],
+              color: theme.palette.text.primary,
+              fontWeight: 600,
+            }}
+          />
+        </Box>
+      </Box>
+      <Divider />
+      {/* Content: Thesis, Antithesis, Synthesis (constrained height) */}
+      <CardContent
+        sx={{
+         
+          flex: '0 1 auto',
+          maxHeight: 220,
+          overflowY: 'auto',
+          p: 1,
+          px: 2,
+          '&:last-child': { pb: 1.5 },
+        }}
+      >
+        <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1}}>
+          <Box>
+            <Typography component="span" fontWeight={700} sx={{ display: 'block', mb: 0.25 }} variant="body2">
+              Thesis:
+            </Typography>
+            {isLocked ? (
+              <Typography variant="body2" sx={{ whiteSpace: 'pre-wrap' }}>
+                {sceneContent.thesis?.trim() || '—'}
+              </Typography>
+            ) : (
+              <TextField
+                fullWidth
+                size="small"
+                multiline
+                minRows={2}
+                maxRows={4}
+                value={sceneContent.thesis ?? ''}
+                onChange={handleContentChange('thesis')}
+                placeholder="—"
+                variant="outlined"
+                sx={{ '& .MuiInputBase-input': { py: 0.5 } }}
+              />
+            )}
+          </Box>
+          <Box>
+            <Typography component="span" fontWeight={700} sx={{ display: 'block', mb: 0.25 }} variant="body2">
+              Antithesis:
+            </Typography>
+            {isLocked ? (
+              <Typography variant="body2" sx={{ whiteSpace: 'pre-wrap' }}>
+                {sceneContent.antithesis?.trim() || '—'}
+              </Typography>
+            ) : (
+              <TextField
+                fullWidth
+                size="small"
+                multiline
+                minRows={2}
+                maxRows={4}
+                value={sceneContent.antithesis ?? ''}
+                onChange={handleContentChange('antithesis')}
+                placeholder="—"
+                variant="outlined"
+                sx={{ '& .MuiInputBase-input': { py: 0.5 } }}
+              />
+            )}
+          </Box>
+          <Box>
+            <Typography component="span" fontWeight={700} sx={{ display: 'block', mb: 0.25 }} variant="body2">
+              Synthesis:
+            </Typography>
+            {isLocked ? (
+              <Typography variant="body2" sx={{ whiteSpace: 'pre-wrap' }}>
+                {sceneContent.synthesis?.trim() || '—'}
+              </Typography>
+            ) : (
+              <TextField
+                fullWidth
+                size="small"
+                multiline
+                minRows={2}
+                maxRows={4}
+                value={sceneContent.synthesis ?? ''}
+                onChange={handleContentChange('synthesis')}
+                placeholder="—"
+                variant="outlined"
+                sx={{ '& .MuiInputBase-input': { py: 0.5 } }}
+              />
+            )}
+          </Box>
+        </Box>
+      </CardContent>
+      <Divider />
+      {/* Footer: Lock, Version dropdown, Delete (taller so not cut off) */}
+      <Box
+        sx={{
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+          gap: 1,
+          minHeight: 30,
+          px: 2,
+          py: 1.5,
+          flexShrink: 0,
+        }}
+      >
+        <IconButton
+          size="small"
+          onClick={handleToggleLock}
+          sx={{
+            backgroundColor: theme.palette.grey[200],
+            color: theme.palette.grey[700],
+            '&:hover': {
+              backgroundColor: theme.palette.grey[300],
+            },
+          }}
+          aria-label={isLocked ? 'Unlock scene' : 'Lock scene'}
+        >
+          {isLocked ? (
+            <LockIcon fontSize="small" />
+          ) : (
+            <LockOpenIcon fontSize="small" />
+          )}
+        </IconButton>
+        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, flex: 1, justifyContent: 'center' }}>
+          <FormControl size="small" sx={{ minWidth: 140 }}>
+            <Select
+              value={selectValue}
+              onChange={handleVersionChange}
+              disabled={isLocked}
+              displayEmpty
+              sx={{
+                backgroundColor: theme.palette.grey[100],
+                borderRadius: 1,
+                fontSize: '0.875rem',
+                '& .MuiSelect-select': { py: 0.75 },
+              }}
+              renderValue={(v) => `v${v} (Active)`}
+            >
+              {versionOptionsList.map((ver) => (
+                <MenuItem key={ver} value={String(ver)}>
+                  v{ver}{creatingNewVersion && ver === versionOptionsList.length ? ' (New)' : ''}
+                </MenuItem>
+              ))}
+            </Select>
+          </FormControl>
+          <IconButton
+            size="small"
+            onClick={handleAddVersionClick}
+            disabled={isLocked}
+            aria-label="Add new version"
+            sx={{
+              backgroundColor: theme.palette.primary.light,
+              color: theme.palette.primary.contrastText ?? theme.palette.common.white,
+              '&:hover': { backgroundColor: theme.palette.primary.main },
+            }}
+          >
+            <AddIcon fontSize="small" />
+          </IconButton>
+        </Box>
+        <IconButton
+          size="small"
+          onClick={() => {
+            if (!projectId) return;
+            deleteSceneMutation.mutate(
+              { projectId, number },
+              { onSuccess: () => onDelete?.() }
+            );
+          }}
+          sx={{
+            backgroundColor: theme.palette.error.light,
+            color: theme.palette.error.contrastText ?? theme.palette.common.white,
+            '&:hover': {
+              backgroundColor: theme.palette.error.main,
+            },
+          }}
+          aria-label="Delete scene"
+        >
+          <DeleteIcon fontSize="small" />
+        </IconButton>
+      </Box>
+    </Card>
+  );
+};

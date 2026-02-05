@@ -1,23 +1,26 @@
 import { useEffect } from "react"
 import { GqlStatements } from "../enums"
 
-export const useCreateMutation = (gqlStatement, variables: any, mutation, gqlStatementName) => {
+export const useCreateMutation = (
+    gqlStatement: string,
+    variables: any,
+    mutation: any,
+    gqlStatementName: string) => {
+
     useEffect(() => {
-        console.log(`useCreatemutation args ${JSON.stringify({
-            gqlStatement,
-            variables,
-            gqlStatementName
-        }, null, 2)}`)
-        if(gqlStatement) {
-            if(gqlStatementName === GqlStatements.CREATE_PROJECT && variables.title) {
-            
-                mutation.mutate()
-        
-            } else if (gqlStatementName === GqlStatements.UPDATE_SCENE) {
-                mutation.mutate()
+        if(variables) {
+            if(Object.keys(variables).some((key: string): boolean => variables[key] !== "")) {
+
+                if(gqlStatement) {
+                    if(gqlStatementName === GqlStatements.CREATE_PROJECT && variables.title) {
+                        mutation.mutate()
+
+                    } else if (gqlStatementName === GqlStatements.CREATE_SCENE) {
+                        mutation.mutate()
+                    }
+                }
             }
         }
-        
     }, [gqlStatement, variables?.title, variables])
     return
 }

@@ -6,7 +6,6 @@ import ArticleTwoToneIcon from '@mui/icons-material/ArticleTwoTone';
 import { useTheme } from '@mui/material/styles';
 
 export const Progress: React.FC<any> =  ({characters, scenes, treatment}) => {
-    console.log(`progress characters: ${characters} scenes: ${scenes} treatment: ${treatment}`)
     const theme = useTheme()
 
     return (

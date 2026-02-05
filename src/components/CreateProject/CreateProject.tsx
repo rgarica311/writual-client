@@ -1,106 +1,241 @@
-'use client'
-import { Button, Container, Dialog, DialogActions, DialogContent, DialogTitle, FormControl, InputLabel, MenuItem, Select, TextField, useTheme } from "@mui/material";
-import React, { useCallback, useEffect, useState } from "react";
-import { useUserStore } from '@/state/userGeneration';
-import { ProjectType } from '@/enums/ProjectEnums'
-import { CreateProjectProps } from "@/interfaces/project";
+'use client';
 
+import * as React from 'react';
+import {
+  Box,
+  Button,
+  Chip,
+  Container,
+  Dialog,
+  DialogActions,
+  DialogContent,
+  DialogTitle,
+  FormControl,
+  InputLabel,
+  MenuItem,
+  Select,
+  TextField,
+  useTheme,
+} from '@mui/material';
+import { useOutlineFrameworksStore } from '@/state/outlineFrameworks';
+import { ProjectType } from '@/enums/ProjectEnums';
+import { CreateProjectProps } from '@/interfaces/project';
 
-const InputWrapper: React.FC<any> = ({ children }) => {
-    return (
-      <Container disableGutters sx={{ display: "flex", justifyContent: "space-between", height: "56px" }}>
-        {children}
-      </Container>
-    )
+import { isValidImageUrl, getImageUrlForStorage } from '../../utils/imageUrl';
+
+const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+function isValidEmail(email: string): boolean {
+  return EMAIL_REGEX.test(email.trim());
 }
 
-export const CreateProject: React.FC<CreateProjectProps> = ({setAddProject, handleAddProject}) =>  {
-  const outlines = useUserStore((state) => state.outlines)
+export const CreateProject: React.FC<CreateProjectProps> = ({ setAddProject, handleAddProject }) => {
+  const frameworks = useOutlineFrameworksStore((state) => state.frameworks);
   const theme = useTheme();
-  const [formValues, setFormValues] = useState<any>({})
+  const [formValues, setFormValues] = React.useState<Record<string, any>>({});
+  const [sharedWithEmails, setSharedWithEmails] = React.useState<string[]>([]);
+  const [emailInput, setEmailInput] = React.useState('');
+  const [emailError, setEmailError] = React.useState('');
 
-  useEffect(() => {
-    console.log('create project formValues: ', formValues)
-  }, [formValues])
+  const updateForm = React.useCallback((
+    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement> | { value: unknown },
+    key: string
+  ) => {
+    const value = 'target' in e && e.target != null
+      ? (e as React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>).target.value
+      : (e as { value: unknown }).value;
+    setFormValues((prev) => ({ ...prev, [key]: value }));
+  }, []);
 
-  const updateForm = useCallback((e: React.ChangeEvent<HTMLInputElement>, index) => {
-    console.log(`create proejct updateForm e:  `, e)
-    console.log(`create proejct oldValues: ${JSON.stringify(formValues, null, 2)}`)
-    console.log(`create proejct updateForm index: `, index)
-    const values = formValues
-    console.log(`create proejct values after creating: ${JSON.stringify(values, null, 2)}`)
-
-    if (index === 'lowerDate' || index === "upperDate") {
-      console.log(`create proejct index: `, index)
-      console.log(`create proejct index check values: ${JSON.stringify(values, null, 2)}`)
-      console.log(`create proejct values.hasOwnProperty('lowerDate'): ${values.hasOwnProperty('lowerDate')}`)
-      console.log(`create proejct values.lowerDate ${values.lowerDate}`)
-      values[index] = e
-      console.log('create proejct setting upperDate values: ', values)
-      setFormValues(values)
-      return
-    } else if (index === 'days') {
-      values[index] = e.target.checked ? '90' : '30'
-    } else {
-      values[index] = e.target.value
+  const addEmail = React.useCallback(() => {
+    const trimmed = emailInput.trim();
+    if (!trimmed) return;
+    if (!isValidEmail(trimmed)) {
+      setEmailError('Enter a valid email address.');
+      return;
     }
-    console.log(`create proejct values: ${JSON.stringify(values, null, 2)}`)
-    setFormValues(values)
-  }, [formValues])
+    if (sharedWithEmails.includes(trimmed)) return;
+    setEmailError('');
+    setEmailInput('');
+    setSharedWithEmails((prev) => [...prev, trimmed]);
+  }, [emailInput, sharedWithEmails]);
+
+  const removeEmail = React.useCallback((email: string) => {
+    setSharedWithEmails((prev) => prev.filter((e) => e !== email));
+  }, []);
+
+  const handleEmailKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === 'Enter' || e.key === ',') {
+      e.preventDefault();
+      addEmail();
+    }
+  };
 
   return (
-    <Dialog fullWidth={true} open={true} PaperProps={{ style: { minWidth: "900px", maxHeight: "500px", backgroundColor: theme.palette.background.default} }}>
-        <DialogTitle  sx={{paddingLeft: 5, paddingTop: 3}}>CREATE PROJECT</DialogTitle>
-        <DialogContent sx={{marginTop:  "5px", display:"flex", flexWrap: "wrap", padding: 5, paddingBottom: 2, height: "662px", width: "100%"}}>
-            
-            <InputWrapper>
-                <TextField required label="Title" onChange={(e: React.ChangeEvent<HTMLInputElement>) => updateForm(e, "title")} placeholder="Title" variant="standard" sx={{width: "400px", height: "56px"}}></TextField>
-                <TextField  label="Genre" onChange={(e: React.ChangeEvent<HTMLInputElement>) => updateForm(e, "genre")} placeholder="Ex: Drama, Comedy, etc" variant="standard" sx={{width: "400px", height: "56px"}}></TextField>
-            </InputWrapper>
-
-            <InputWrapper>
-              <TextField label="Logline"  onChange={(e: React.ChangeEvent<HTMLInputElement>) => updateForm(e, "logline")} placeholder="Logline" variant="standard" sx={{width: "400px", height: "56px"}}></TextField>
-              <TextField  label="Budget" onChange={(e: React.ChangeEvent<HTMLInputElement>) => updateForm(e, "budget")} placeholder="Budget" variant="standard" sx={{width: "400px", height: "56px"}}></TextField>
-            </InputWrapper>
-
-            <InputWrapper>
-                <TextField label="Similar" onChange={(e: React.ChangeEvent<HTMLInputElement>) => updateForm(e, "similar_projects")} placeholder="Similar Movies" variant="standard" sx={{width: "400px", height: "56px"}}></TextField>
-                <TextField  label="Time Period" onChange={(e: React.ChangeEvent<HTMLInputElement>) => updateForm(e, "time_period")} placeholder="Time Period" variant="standard" sx={{width: "400px", height: "56px"}}></TextField>
-            </InputWrapper>
-
-
-            <InputWrapper>
-              <FormControl sx={{width: "400px", height: "56px"}}>
-                  <InputLabel sx={{color: theme.palette.text.primary}}>Project Type</InputLabel>
-                  <Select required variant="standard" onChange={(e: any) => updateForm(e, "type")} sx={{flexGrow: 1, height: "56px"}} label="Type">
-                    <MenuItem value={ProjectType.Feature}>Feature Film</MenuItem>
-                    <MenuItem value={ProjectType.Television}>Television</MenuItem>
-                    <MenuItem value={ProjectType.Short}>Short Film</MenuItem>
-                    
-                  </Select>
-              </FormControl>
-
-              <FormControl sx={{width: "400px", height: "56px"}}>
-                <InputLabel sx={{color: theme.palette.text.primary}}>Outline</InputLabel>
-                <Select variant="standard" onChange={(e: any) => updateForm(e, "outline")} sx={{flexGrow: 1, height: "56px"}} label="Outline">
-                  {
-                    outlines.length > 0 
-                      ? outlines.map((name: string, index: number) => {
-                          return <MenuItem key={index} value={name}>{name}</MenuItem>
-                        })
-                  
-                      : <Button sx={{width: "100%", height: "54px", fontSize: "1.4rem",  letterSpacing: ".2em"}}>Create Outline</Button>
-                  }
-                </Select>
-              </FormControl>
-            </InputWrapper> 
-            
-        </DialogContent>
-        <DialogActions sx={{paddingBottom: 3, paddingRight: 5}}>
-            <Button onClick={() => { setAddProject(false) }} variant="contained" color='secondary'  sx={{ width: "94px", height:"36px", paddingLeft: "6px", paddingTop: "16px", paddingRight: "6px", paddingBottom: "16px"}}>CANCEL</Button>
-            <Button onClick={() => {handleAddProject(formValues); setAddProject(false)}} variant="contained" color='primary' sx={{width: "138px", height:"36px", paddingLeft: "6px", paddingTop: "16px", paddingRight: "6px", paddingBottom: "16px"}}>SUBMIT</Button>
-        </DialogActions>
+    <Dialog
+      fullWidth
+      open
+      onClose={() => setAddProject(false)}
+      PaperProps={{ style: { backgroundColor: theme.palette.background.default } }}
+    >
+      <DialogTitle sx={{ paddingLeft: 4, paddingTop: 3 }}>CREATE PROJECT</DialogTitle>
+      <DialogContent sx={{ display: 'flex', flexDirection: 'column', gap: 2, padding: 4 }}>
+        <TextField
+          required
+          label="Title"
+          value={formValues.title ?? ''}
+          onChange={(e) => updateForm(e, 'title')}
+          placeholder="Title"
+          fullWidth
+        />
+        <Container disableGutters sx={{ display: 'flex', gap: 2 }}>
+          <TextField
+            label="Genre"
+            value={formValues.genre ?? ''}
+            onChange={(e) => updateForm(e, 'genre')}
+            placeholder="Ex: Drama, Comedy, etc"
+            fullWidth
+          />
+          <TextField
+            label="Budget"
+            value={formValues.budget ?? ''}
+            onChange={(e) => updateForm(e, 'budget')}
+            placeholder="Budget"
+            fullWidth
+          />
+        </Container>
+        <TextField
+          label="Logline"
+          value={formValues.logline ?? ''}
+          onChange={(e) => updateForm(e, 'logline')}
+          placeholder="Logline"
+          fullWidth
+        />
+        <TextField
+          label="Poster (Image URL)"
+          value={formValues.poster ?? ''}
+          onChange={(e) => updateForm(e, 'poster')}
+          placeholder="https://example.com/poster.jpg"
+          fullWidth
+          error={Boolean(formValues.poster?.trim()) && !isValidImageUrl(formValues.poster ?? '')}
+          helperText={
+            formValues.poster?.trim() && !isValidImageUrl(formValues.poster ?? '')
+              ? "URL isn't a valid image URL."
+              : undefined
+          }
+        />
+        <Box>
+          <TextField
+            label="Share with (email)"
+            value={emailInput}
+            onChange={(e) => { setEmailInput(e.target.value); setEmailError(''); }}
+            onBlur={addEmail}
+            onKeyDown={handleEmailKeyDown}
+            placeholder="Enter email and press Enter"
+            fullWidth
+            size="small"
+            error={Boolean(emailError)}
+            helperText={emailError}
+          />
+          {sharedWithEmails.length > 0 && (
+            <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5, mt: 1 }}>
+              {sharedWithEmails.map((email) => (
+                <Chip
+                  key={email}
+                  label={email}
+                  onDelete={() => removeEmail(email)}
+                  size="small"
+                />
+              ))}
+            </Box>
+          )}
+        </Box>
+        <Container disableGutters sx={{ display: 'flex', gap: 2 }}>
+          <TextField
+            label="Similar projects"
+            value={formValues.similarProjects ?? ''}
+            onChange={(e) => updateForm(e, 'similarProjects')}
+            placeholder="Similar Movies"
+            fullWidth
+          />
+          <TextField
+            label="Time Period"
+            value={formValues.timePeriod ?? ''}
+            onChange={(e) => updateForm(e, 'timePeriod')}
+            placeholder="Time Period"
+            fullWidth
+          />
+        </Container>
+        <Container disableGutters sx={{ display: 'flex', gap: 2 }}>
+          <FormControl fullWidth>
+            <InputLabel>Project Type</InputLabel>
+            <Select
+              required
+              value={formValues.type ?? ''}
+              label="Project Type"
+              onChange={(e) => updateForm(e as any, 'type')}
+            >
+              <MenuItem value={ProjectType.Feature}>Feature Film</MenuItem>
+              <MenuItem value={ProjectType.Television}>Television</MenuItem>
+              <MenuItem value={ProjectType.Short}>Short Film</MenuItem>
+            </Select>
+          </FormControl>
+          <FormControl fullWidth>
+            <InputLabel>Outline</InputLabel>
+            <Select
+              value={formValues.outlineName ?? ''}
+              label="Outline"
+              onChange={(e) => updateForm(e as any, 'outlineName')}
+            >
+              {frameworks.length > 0 ? (
+                frameworks.map((fw) => (
+                  <MenuItem key={fw.id} value={fw.name}>
+                    {fw.name}
+                  </MenuItem>
+                ))
+              ) : (
+                <MenuItem value="">
+                  <em>Create Outline</em>
+                </MenuItem>
+              )}
+            </Select>
+          </FormControl>
+        </Container>
+      </DialogContent>
+      <DialogActions sx={{ paddingBottom: 3, paddingRight: 4 }}>
+        <Button onClick={() => setAddProject(false)} variant="contained" color="secondary">
+          Cancel
+        </Button>
+        <Button
+          onClick={() => {
+            const budgetNum = formValues.budget !== undefined && formValues.budget !== '' ? Number(formValues.budget) : undefined;
+            const similarProjects = typeof formValues.similarProjects === 'string'
+              ? formValues.similarProjects.split(',').map((s: string) => s.trim()).filter(Boolean)
+              : Array.isArray(formValues.similarProjects) ? formValues.similarProjects : [];
+            handleAddProject({
+              ...formValues,
+              title: formValues.title ?? '',
+              logline: formValues.logline ?? '',
+              genre: formValues.genre ?? '',
+              type: formValues.type ?? '',
+              poster: getImageUrlForStorage(formValues.poster ?? ''),
+              sharedWith: sharedWithEmails,
+              budget: budgetNum,
+              similarProjects,
+              outlineName: formValues.outlineName ?? undefined,
+            });
+            setAddProject(false);
+          }}
+          variant="contained"
+          color="primary"
+          disabled={
+            !(formValues.title ?? '').trim() ||
+            (Boolean(formValues.poster?.trim()) && !isValidImageUrl(formValues.poster ?? ''))
+          }
+        >
+          Submit
+        </Button>
+      </DialogActions>
     </Dialog>
-
-  )
-}
+  );
+};

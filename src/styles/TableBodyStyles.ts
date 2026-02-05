@@ -19,7 +19,7 @@ export const tableBodyStyle = {
     paper: {
         boxShadow: "none", 
         padding: 1, 
-        maxHeight: "calc(100% - 40px)", 
+        //maxHeight: "calc(100% - 40px)", 
         display: "flex", 
         flexDirection: "column", 
         width: '100%'
@@ -34,7 +34,8 @@ export const tableBodyStyle = {
         display: "flex", 
         flexDirection: "row", 
         alignItems: "center", 
-        margin: 0
+        margin: 0,
+        border: "1px solid green"
     },
     genreChip: {
         borderRadius: 5, 

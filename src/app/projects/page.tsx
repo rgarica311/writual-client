@@ -1,113 +1,117 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useEffect, Suspense } from 'react';
 import { request } from "graphql-request";
-import { useQuery, useQueryClient }  from "@tanstack/react-query";
-import { CustomTable, CreateProject } from "../../components"
-import { headerCells } from "../../interfaces"
-import { useUserStore } from '@/state/userGeneration';
-import { PROJECTS_QUERY, CREATE_PROJECT } from '@/queries/ProjectQueries';
-import { createMutation } from '@/helpers/createMutation';
-import { useCreateMutation } from 'hooks';
-import { GqlStatements } from "@/enums/GqlStatements"
-import { useProjectTableState } from '@/state/userGeneration';
-import { Mutation } from "@/interfaces/scene"
-import { sceneStore } from '@/state/sceneState';
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { ProjectCard } from "../../components"
+import { useUserStore } from 'state/userGeneration';
+import { useCreateProjectModalStore } from '@/state/createProjectModal';
+import { PROJECTS_QUERY } from '@/queries/ProjectQueries';
+import { DELETE_PROJECT } from 'mutations/ProjectMutations';
+import { Box, Button, Container, Typography } from '@mui/material';
+import AddIcon from '@mui/icons-material/Add';
+import Image from 'next/image';
+import Link from 'next/link';
+import { SettingsPopover } from '@/components/SettingsPopover';
 
-const endpoint = `http://localhost:4000`
+const endpoint = `http://localhost:4000`;
 
 export default function DataTable() {
-  const queryClient = useQueryClient()
-  const createStatement = useProjectTableState((state) => state.createStatement)
-  const setCreateStatement = useProjectTableState((state) => state.setCreateStatement)
+  const queryClient = useQueryClient();
   const setProjects = useUserStore((state) => state.setProjects)
   const projects = useUserStore((state) => state.projects)
-  const [addProject, setAddProject]  = useState(false)
-  const [ createVariables, setCreateVariables ] = useState<any>()
-  const setActiveVersion = sceneStore((state) => state.setActiveVersion)
-  const columnStatus = React.useMemo(() => ({
-    title: true,
-    logline: true,
-    genre: true,
-    type: true,
-    progress: true,
-    user: true,
-    outline: true,
-    actions: true
-  }), []) 
- 
-  const filters = React.useMemo(() => ({
-    genre:  {
-      drama: {selected: true, label: "Drama"},
-      comedy: {selected: true, label: "Comedy"},
-      crime: { selected: true, label: "Crime"},
-      scienceFiction:  {selected: true, label: "Science Fiction"},
-    }, 
-    type: {
-      feature: {selected: true, label: "Feature"},
-      short: {selected: true, label: "Short"},
-      television: { selected: true, label: "Television"},
-    }
-    
-  }), [])
-  
-  const { data, isLoading, error }: any = useQuery({ queryKey: ['projects'], queryFn: async () =>  request(endpoint, PROJECTS_QUERY)})
+  const openCreateProjectModal = useCreateProjectModalStore((s) => s.openModal)
 
+  const { data }: any = useQuery({ queryKey: ['projects'], queryFn: async () => request(endpoint, PROJECTS_QUERY) })
+
+  const deleteProjectMutation = useMutation({
+    mutationFn: (deleteProjectId: string) =>
+      request(endpoint, DELETE_PROJECT, { deleteProjectId }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['projects'] });
+    },
+  });
+
+  const dataRef = React.useRef<any>(null);
   useEffect(() => {
-    console.log('debug scene projects data updated: ', data)
-    data?.getProjectData.length > 0 && setProjects(data?.getProjectData)
-  }, [data])
-
-  useEffect(() => {
-    console.log('create project rows updated: ', projects)
-    projects.forEach((row: any) =>  {
-      row.characters = true
-      //row.scenes =  true
-      row.treatment = true
-    })
-  }, [projects])
-
-  console.log('Projects: ', data?.getProjectData)
-
-  const addProjectMutationArgs: Mutation = {
-    createStatement,
-    createVariables,
-    invalidateQueriesArray: ['projects'],
-    stateResetters: {
-      setCreateStatement
+    if (data?.getProjectData?.length > 0 && dataRef.current !== data) {
+      dataRef.current = data;
+      const enriched = data.getProjectData.map((row: any) => ({
+        ...row,
+        coverImage: row.poster,
+        characters: true,
+        treatment: true
+      }))
+      setProjects(enriched)
     }
-  }
-
-  const mutation = createMutation(addProjectMutationArgs)
-
-  useCreateMutation(createStatement, createVariables, mutation, GqlStatements.CREATE_PROJECT)
-
-  const handleAddProject = (formValues: any) => {
-    console.log('create project handleAddProject formValues: ', formValues)
-    formValues.user = "rory.garcia1@gmail.com"
-    setCreateVariables(formValues)
-    setCreateStatement(CREATE_PROJECT)
-  }
+  }, [data, setProjects])
 
   return (
       <>
       {
+        <Suspense fallback={<div>Loading...</div>}>
+          
+            <Box sx={{ display: 'flex', flexDirection: 'column' }}>
+
+              <Container sx={{ 
+                minWidth: "100%", 
+                display: "flex", flexDirection: "row", justifyContent: "center", alignItems: "center", gap: 1, marginTop: "10px", textAlign: "center", height: "70px", textDecoration: "none", color: "inherit" }}>
+                <Link href="/projects" style={{ display: "flex", alignItems: "center", gap: 8, textDecoration: "none", color: "inherit" }}>
+                  <Image src="/logo_symbol.png" alt="Writual" width={65} height={65} loading="lazy" />
+                  <Typography letterSpacing={5} variant="h6" color="primary" fontSize={32}>ritual</Typography>
+                </Link>
+              </Container>
+              <Box sx={{ position: 'fixed', bottom: 16, left: 16, zIndex: 1200 }}>
+                <SettingsPopover standalone />
+              </Box>
+
+              <Box sx={{ display: 'flex', justifyContent: 'center', paddingTop: 2, paddingBottom: 2 }}>
+                <Button
+                  variant="contained"
+                  color="primary"
+                  startIcon={<AddIcon />}
+                  onClick={openCreateProjectModal}
+                >
+                  Create Project
+                </Button>
+              </Box>
+
+                <Box
+                  sx={{
+                    height: '100%',
+                    paddingTop: 5,
+                    overflowY: 'scroll',
+                    display: 'flex',
+                    justifyContent: 'space-evenly',
+                    flexWrap: 'wrap',
+                    gap: 2,
+                  }}
+                >
+                  {projects.map((project: any, index: number) => (
+                    <Box
+                      key={project.id ?? index}
+                      sx={{  marginTop: '20px', flexShrink: 0 }}
+                    >
+                      <ProjectCard
+                        title={project.title}
+                        author={project.user}
+                        genre={project.genre}
+                        logline={project.logline}
+                        coverImage={project.coverImage ?? project.poster}
+                        onDelete={project._id ? () => deleteProjectMutation.mutate(project._id) : undefined}
+                        projectId={project._id}
+                        sharedWith={project.sharedWith ?? []}
+                        to={project._id ? `/project/${project._id}` : undefined}
+                      />
+                    </Box>
+                  ))}
+                </Box>
+           
+
+            </Box>
+          
         
-        <CustomTable 
-          setAddProject={setAddProject}
-          defaultSortColumn="title"
-          label="Projects" 
-          headerCells={headerCells}
-          rows={projects}
-          headerButtonText="Share"
-          headerButtonAriaLabel="share-project(s)"
-        />
-        
-      } 
-      {
-        addProject && (
-          <CreateProject handleAddProject={handleAddProject} setAddProject={setAddProject}  />
-        )
+        </Suspense>
       }
 
       </>

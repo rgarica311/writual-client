@@ -3,7 +3,7 @@ import { useEffect, useMemo, useRef } from "react";
 import * as React from 'react';
 
 export const useDebounce = (callback: Function) => {
-    const ref = useRef<Function>();
+    const ref = useRef<Function | null>(null);
   
     useEffect(() => {
       ref.current = callback;

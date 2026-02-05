@@ -35,7 +35,7 @@ const ExpandMore = styled((props: ExpandMoreProps) => {
   }),
 }));
 
-export const CharacterCard: React.FC<any> = ({name, details, id}) => {
+export const CharacterCard: React.FC<any> = ({name, details, id, imageUrl}) => {
   const [expanded, setExpanded] = React.useState(false);
   const [version, setVersion] = React.useState(1)
   const [ currentId,  setCurrentId ] =  React.useState<number  | undefined>()
@@ -51,12 +51,7 @@ export const CharacterCard: React.FC<any> = ({name, details, id}) => {
   }
 
   const detail = details.find((detail: any) => detail.version === version)
-  console.log('detail: ', detail)
   detail.url  = "https://www.broadwayworld.com/ezoimgfmt/cloudimages.broadwayworld.com/headshots/452956sm.jpg?dt=42352886&ezimgfmt=ng%3Awebp%2Fngcb36%2Frs%3Adevice%2Frscb37-2"
-
-  React.useEffect(() => {
-    console.log(`${currentId} === ${id}: ${currentId === id}`)
-  }, [currentId])
 
   return (
   
@@ -64,7 +59,7 @@ export const CharacterCard: React.FC<any> = ({name, details, id}) => {
         <CardMedia
           component="img"
           height="300"
-          image={detail.url}
+          image={imageUrl}
           alt="Paella dish"
         />
           <CardHeader

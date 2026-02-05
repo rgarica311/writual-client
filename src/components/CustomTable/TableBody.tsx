@@ -10,7 +10,7 @@ import EditIcon from '@mui/icons-material/Edit'
 import ShareIcon from '@mui/icons-material/Share'
 import DeleteIcon from '@mui/icons-material/Delete'
 import debounce from "debounce";
-import { DELETE_PROJECT, UPDATE_PROJECT} from "@/queries/ProjectQueries";
+import { DELETE_PROJECT, UPDATE_PROJECT } from "mutations/ProjectMutations";
 import { createMutation } from '@/helpers/createMutation';
 import { TableBodyProps } from "interfaces";
 import { GqlStatements } from "@/enums/GqlStatements";
@@ -62,7 +62,6 @@ export const CustomTableBody: React.FC<TableBodyProps> = (props: TableBodyProps)
     useEffect(()  => {
        
         if(Object.keys(variables).length > 0) {
-            console.log('variables: ', variables)
             updateMutation.mutate()
             setEdit(false)
         }
@@ -71,13 +70,11 @@ export const CustomTableBody: React.FC<TableBodyProps> = (props: TableBodyProps)
     },  [variables])
 
     const handleEditProject = (e: any, id: string, title: string) => {
-        //console.log(`debug edit handleEditProject: ${id} title: ${title}`)
         handleCloseActions()
         setEdit(true)
     }
 
     const getGenreChipColor = (genre: string) => {
-        console.log('genre: ', genre)
         if(genre) {
             let genreVar = genre.replace(" ", "").toLocaleLowerCase()
 
@@ -255,12 +252,11 @@ export const CustomTableBody: React.FC<TableBodyProps> = (props: TableBodyProps)
 
                                                     {
                                                         cell.dataIndex === "outline"  &&   (
-                                                            console.log('outline:  ', row[cell.dataIndex] === null ),
                                                             (edit && currentProject === row.id ) || row[cell.dataIndex] === null
                                                                 ?   <FormControl sx={{width: "100%"}}>
                                                                         <InputLabel color="secondary">Pick Outline Format</InputLabel>
 
-                                                                        <Select placeholder="Choose Outline"  /*onChange={(e: SelectChangeEvent) => {updateProject({type: Action.UPDATE_OUTLINE, payload: { value: e.target.value, id: row.id}})}}*/ color="secondary" variant="outlined" sx={{minWidth: "100%", height: "100%"}} label="Outline">
+                                                                        <Select /*onChange={(e: SelectChangeEvent) => {updateProject({type: Action.UPDATE_OUTLINE, payload: { value: e.target.value, id: row.id}})}}*/ color="secondary" variant="outlined" sx={{minWidth: "100%", height: "100%"}} label="Outline">
                                                                             <MenuItem value={"Heroe's Journey"}>Heroe's Journey</MenuItem>
                                                                             <MenuItem value={"Save The Cat"}>Save The Cat</MenuItem>
                                                                             <MenuItem value={"Anatomy of Story"}>Anatomy of Story</MenuItem>
