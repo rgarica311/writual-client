@@ -64,7 +64,7 @@ export function ProjectHeader() {
   const [projectData, setProjectData] = React.useState<Project>(defaultProjectData);
 
   const variables = React.useMemo(
-    () => ({ input: { user: 'rory.garcia1@gmail.com', id } }),
+    () => ({ input: { user: 'rory.garcia1@gmail.com', _id: id } }),
     [id]
   );
 

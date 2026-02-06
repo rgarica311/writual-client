@@ -3,7 +3,7 @@ import { gql } from 'graphql-request';
 export const PROJECT_SCENES_QUERY = gql`
   query GetProjectScenes($input: ProjectFilters) {
     getProjectData(input: $input) {
-      id
+      _id
       scenes {
         number
         activeVersion

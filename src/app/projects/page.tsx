@@ -89,7 +89,7 @@ export default function DataTable() {
                 >
                   {projects.map((project: any, index: number) => (
                     <Box
-                      key={project.id ?? index}
+                      key={project._id ?? index}
                       sx={{  marginTop: '20px', flexShrink: 0 }}
                     >
                       <ProjectCard

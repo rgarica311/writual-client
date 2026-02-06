@@ -43,7 +43,7 @@ export const UPDATE_PROJECT = gql`
 mutation UpdateProject($title: String!, $logline: String!, $user: String!, $type: ProjectType!){
     updateProject(project:  { title: $title, logline: $logline, user: $user, type: $type }) {
         title,
-        id,
+        _id,
         user, 
         type
     }
@@ -53,7 +53,7 @@ mutation UpdateProject($title: String!, $logline: String!, $user: String!, $type
 export const UPDATE_PROJECT_SHARED_WITH = gql`
   mutation UpdateProjectSharedWith( $sharedWith: [String]) {
     updateProjectSharedWith(sharedWith: $sharedWith) {
-      id
+      _id
       sharedWith
     }
   }

@@ -2,17 +2,15 @@ import { gql } from 'graphql-request';
 
 export const CREATE_SCENE = gql`
   mutation CreateScene(
-    $_id String!
     $versions: [SceneContentInput]
+    $_id: String
   ) {
     createScene(
       input: {
-        act: $act
-        projectId: $projectId
+        _id: $_id
         versions: $versions
       }
     ) {
-      projectId
       number
     }
   }

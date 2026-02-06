@@ -46,18 +46,19 @@ export function useProjectSceneMutations() {
 
   const createSceneMutation = useMutation({
     mutationFn: async (variables: {
-      projectId: string;
-      act?: number;
+      _id: string;
+      number: number;
       versions: any[];
-    }) =>
+    }) => { 
+      console.log('variables: ', variables) 
       request(ENDPOINT, CREATE_SCENE, {
-        projectId: variables.projectId,
-        act: variables.act,
+        _id: variables._id,
         versions: variables.versions,
-      }),
+        number: variables.number,
+      })},
     onSuccess: (_, variables) => {
-      if (variables.projectId) {
-        queryClient.invalidateQueries({ queryKey: [PROJECT_SCENES_QUERY_KEY, variables.projectId] });
+      if (variables._id) {
+        queryClient.invalidateQueries({ queryKey: [PROJECT_SCENES_QUERY_KEY, {_id: variables._id}] });
       }
     },
   });

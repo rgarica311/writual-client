@@ -23,7 +23,7 @@ export default function CharactersPage() {
 
   const endpoint = 'http://localhost:4000';
 
-  const variables = React.useMemo(() => ({ input: { user: 'rory.garcia1@gmail.com', id } }), [id]);
+  const variables = React.useMemo(() => ({ input: { user: 'rory.garcia1@gmail.com', _id: id } }), [id]);
 
   const { data }: any = useQuery({
     queryKey: ['project-characters', id],

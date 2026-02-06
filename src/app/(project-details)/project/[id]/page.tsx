@@ -194,7 +194,6 @@ export default function Project() {
         //setNewVersion(true)
 
         const newVersion: Scene = {
-            act,
             newScene: true,
             number: scenes.length + 1,
             activeVersion: 1,
@@ -207,7 +206,8 @@ export default function Project() {
                 thesis: "",
                 version: 1,
                 sceneHeading: "",
-                step: activeStep
+                step: activeStep, 
+                locked: false
             }]
         }
 

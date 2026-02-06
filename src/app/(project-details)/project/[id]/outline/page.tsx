@@ -29,12 +29,14 @@ export default function OutlinePage() {
   const { createSceneMutation } = useProjectSceneMutations();
 
   const variables = React.useMemo(
-    () => ({ input: { user: 'rory.garcia1@gmail.com', id } }),
+    () => ({ input: { user: 'rory.garcia1@gmail.com', _id: id } }),
     [id]
   );
 
+  console.log('variables: ', variables)
+
   const { data }: any = useQuery({
-    queryKey: [PROJECT_SCENES_QUERY_KEY, id],
+    queryKey: [PROJECT_SCENES_QUERY_KEY, {_id: id}],
     queryFn: () => request(endpoint, PROJECT_SCENES_QUERY, variables),
     enabled: Boolean(id),
   });
@@ -44,7 +46,8 @@ export default function OutlinePage() {
   const handleNewScene = () => {
     if (!id) return;
     createSceneMutation.mutate({
-      projectId: id,
+      _id: id,
+      number: scenes.length + 1,
       versions: [{ ...DEFAULT_NEW_SCENE_VERSION }],
     });
   };
@@ -84,9 +87,7 @@ export default function OutlinePage() {
                 number={scene.number}
                 newScene={false}
                 versions={scene.versions ?? []}
-                lockedVersion={scene.lockedVersion}
                 activeVersion={activeVersion}
-                act={scene.act}
                 projectId={scene.projectId ?? id}
                 step={activeVersionData?.step ?? ''}
               />
