@@ -35,6 +35,7 @@ interface SceneCardProps {
   newScene?: boolean;
   versions: any[];
   activeVersion?: number | null;
+  lockedVersion?: number | null;
   act?: number;
   projectId?: string;
   step?: string;
@@ -46,6 +47,7 @@ export const SceneCard: React.FC<SceneCardProps> = ({
   newScene = false,
   versions,
   activeVersion,
+  lockedVersion,
   act,
   projectId,
   step,
@@ -70,7 +72,7 @@ export const SceneCard: React.FC<SceneCardProps> = ({
   const versionsRef = useRef<any[]>(versions ?? []);
   const { updateSceneMutation, deleteSceneMutation } = useProjectSceneMutations();
   const theme = useTheme();
-  const isLocked = false;
+  const [isLocked, setIsLocked] = useState(lockedVersion != null);
 
   useEffect(() => {
     versionsRef.current = Array.isArray(versions) ? versions : [];
@@ -81,6 +83,10 @@ export const SceneCard: React.FC<SceneCardProps> = ({
     const nextActive = Math.max(1, Number(activeVersion ?? 1));
     setActiveVersionLocal(nextActive);
   }, [activeVersion]);
+
+  useEffect(() => {
+    setIsLocked(lockedVersion != null);
+  }, [lockedVersion]);
 
 
 
@@ -237,13 +243,15 @@ export const SceneCard: React.FC<SceneCardProps> = ({
     e.preventDefault();
     e.stopPropagation();
     if (!projectId) return;
-   
+    const nextLocked = isLocked ? null : activeVersionLocal;
+    setIsLocked(!isLocked);
     const idx = Math.max(0, activeVersionLocal - 1);
     const baseVersion = versionsRef.current[idx] ?? {};
     updateSceneMutation.mutate({
       _id: projectId,
       number,
       activeVersion: activeVersionLocal,
+      lockedVersion: nextLocked ?? undefined,
       newVersion: false,
       versions: [baseVersion],
     });
@@ -314,7 +322,7 @@ export const SceneCard: React.FC<SceneCardProps> = ({
         sx={{
          
           flex: '0 1 auto',
-          maxHeight: 220,
+          height: 175,
           overflowY: 'auto',
           p: 1,
           px: 2,
@@ -411,10 +419,16 @@ export const SceneCard: React.FC<SceneCardProps> = ({
           size="small"
           onClick={handleToggleLock}
           sx={{
-            backgroundColor: theme.palette.grey[200],
-            color: theme.palette.grey[700],
+            backgroundColor: isLocked
+              ? theme.palette.primary.main
+              : theme.palette.grey[200],
+            color: isLocked
+              ? theme.palette.primary.contrastText ?? theme.palette.common.white
+              : theme.palette.grey[700],
             '&:hover': {
-              backgroundColor: theme.palette.grey[300],
+              backgroundColor: isLocked
+                ? theme.palette.primary.dark
+                : theme.palette.grey[300],
             },
           }}
           aria-label={isLocked ? 'Unlock scene' : 'Lock scene'}

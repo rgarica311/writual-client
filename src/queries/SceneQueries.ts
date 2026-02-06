@@ -7,6 +7,7 @@ export const PROJECT_SCENES_QUERY = gql`
       scenes {
         number
         activeVersion
+        lockedVersion
         projectId
         versions {
           act

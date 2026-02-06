@@ -25,6 +25,7 @@ export const UPDATE_SCENE = gql`
     $_id: String!
     $number: Int
     $activeVersion: Int
+    $lockedVersion: Int
     $newVersion: Boolean
     $newScene: Boolean
     $versions: [SceneContentInput]
@@ -34,6 +35,7 @@ export const UPDATE_SCENE = gql`
         _id: $_id
         number: $number
         activeVersion: $activeVersion
+        lockedVersion: $lockedVersion
         newVersion: $newVersion
         newScene: $newScene
         versions: $versions

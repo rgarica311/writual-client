@@ -15,6 +15,7 @@ export function useProjectSceneMutations() {
       _id: string;
       number: number;
       activeVersion: number;
+      lockedVersion?: number | null;
       newVersion: boolean;
       versions: any[];
     }) =>
@@ -22,6 +23,7 @@ export function useProjectSceneMutations() {
         _id: variables._id,
         number: variables.number,
         activeVersion: variables.activeVersion,
+        lockedVersion: variables.lockedVersion ?? undefined,
         newVersion: variables.newVersion,
         newScene: false,
         versions: variables.versions,

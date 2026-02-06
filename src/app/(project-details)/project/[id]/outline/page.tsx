@@ -86,6 +86,7 @@ export default function OutlinePage() {
                 newScene={false}
                 versions={scene.versions ?? []}
                 activeVersion={activeVersion}
+                lockedVersion={scene.lockedVersion ?? null}
                 projectId={scene.projectId ?? id}
                 step={activeVersionData?.step ?? ''}
               />
