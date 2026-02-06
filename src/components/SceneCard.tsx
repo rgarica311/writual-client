@@ -108,7 +108,7 @@ export const SceneCard: React.FC<SceneCardProps> = ({
       step: details?.step ?? step ?? '',
       act: details?.act ?? act ?? undefined,
     });
-  }, [activeVersionLocal, creatingNewVersion, step, act]);
+  }, [activeVersionLocal, creatingNewVersion, step, act, versions]);
 
   useEffect(() => {
     latestContentRef.current = sceneContent;
@@ -199,10 +199,38 @@ export const SceneCard: React.FC<SceneCardProps> = ({
   const handleAddVersionClick = (e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
-    if (isLocked) return;
+    if (isLocked || !projectId) return;
+    if (saveTimeoutRef.current) {
+      clearTimeout(saveTimeoutRef.current);
+      saveTimeoutRef.current = null;
+    }
     const next = (Array.isArray(versions) ? versions.length : 0) + 1;
     setCreatingNewVersion(true);
     setActiveVersionLocal(next);
+    const newVersionPayload = {
+      version: next,
+      sceneHeading: '',
+      thesis: '',
+      antithesis: '',
+      synthesis: '',
+      synopsis: '',
+      step: step ?? '',
+      act: act ?? undefined,
+    };
+    updateSceneMutation.mutate(
+      {
+        _id: projectId,
+        number,
+        activeVersion: next,
+        newVersion: true,
+        versions: [newVersionPayload],
+      },
+      {
+        onSuccess: () => {
+          setCreatingNewVersion(false);
+        },
+      }
+    );
   };
 
   const handleToggleLock = (e: React.MouseEvent) => {
