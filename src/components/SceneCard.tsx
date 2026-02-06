@@ -21,7 +21,7 @@ import DeleteIcon from '@mui/icons-material/Delete';
 import AddIcon from '@mui/icons-material/Add';
 import { useProjectSceneMutations } from 'hooks';
 
-const SAVE_DEBOUNCE_MS = 5000;
+const SAVE_DEBOUNCE_MS = 2000;
 const FIELD_CLAMP_SX = {
   overflow: 'hidden',
   textOverflow: 'ellipsis',
@@ -145,10 +145,9 @@ export const SceneCard: React.FC<SceneCardProps> = ({
         act: content.act ?? undefined,
         version: versionToSaveInner,
       };
-      console.log('updatedVersion: ', updatedVersion)
       updateSceneMutation.mutate(
         {
-          projectId: projectId!,
+          _id: projectId!,
           number,
           activeVersion: versionToSaveInner,
           newVersion: newVersionInner,
@@ -181,7 +180,7 @@ export const SceneCard: React.FC<SceneCardProps> = ({
       const idx = Math.max(0, next - 1);
       const baseVersion = versionsRef.current[idx] ?? {};
       updateSceneMutation.mutate({
-        projectId,
+        _id: projectId,
         number,
         activeVersion: next,
         newVersion: false,
@@ -214,7 +213,7 @@ export const SceneCard: React.FC<SceneCardProps> = ({
     const idx = Math.max(0, activeVersionLocal - 1);
     const baseVersion = versionsRef.current[idx] ?? {};
     updateSceneMutation.mutate({
-      projectId,
+      _id: projectId,
       number,
       activeVersion: activeVersionLocal,
       newVersion: false,
@@ -244,9 +243,7 @@ export const SceneCard: React.FC<SceneCardProps> = ({
         }}
       >
         <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, minWidth: 220, flex: 1 }}>
-          <Typography variant="subtitle1" fontWeight={700} component="span">
-            Scene {number}:
-          </Typography>
+       
           {isLocked ? (
             <Typography variant="subtitle1" fontWeight={700} component="span" sx={FIELD_CLAMP_SX}>
               {sceneContent.sceneHeading?.trim() || 'Untitled scene'}
@@ -441,7 +438,7 @@ export const SceneCard: React.FC<SceneCardProps> = ({
           onClick={() => {
             if (!projectId) return;
             deleteSceneMutation.mutate(
-              { projectId, number },
+              { _id: projectId!, number },
               { onSuccess: () => onDelete?.() }
             );
           }}

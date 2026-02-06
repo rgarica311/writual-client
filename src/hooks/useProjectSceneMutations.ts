@@ -12,14 +12,14 @@ export function useProjectSceneMutations() {
 
   const updateSceneMutation = useMutation({
     mutationFn: async (variables: {
-      projectId: string;
+      _id: string;
       number: number;
       activeVersion: number;
       newVersion: boolean;
       versions: any[];
     }) =>
       request(ENDPOINT, UPDATE_SCENE, {
-        projectId: variables.projectId,
+        _id: variables._id,
         number: variables.number,
         activeVersion: variables.activeVersion,
         newVersion: variables.newVersion,
@@ -27,38 +27,39 @@ export function useProjectSceneMutations() {
         versions: variables.versions,
       }),
     onSuccess: (_, variables) => {
-      if (variables.projectId) {
-        queryClient.invalidateQueries({ queryKey: [PROJECT_SCENES_QUERY_KEY, variables.projectId] });
+      if (variables._id) {
+        queryClient.invalidateQueries({ queryKey: [PROJECT_SCENES_QUERY_KEY, variables._id] });
       }
     },
   });
 
   const deleteSceneMutation = useMutation({
-    mutationFn: async (variables: { projectId: string; number: number }) =>
+    mutationFn: async (variables: { _id: string; number: number }) =>
       request(ENDPOINT, DELETE_SCENE, {
-        projectId: variables.projectId,
+        projectId: variables._id,
         sceneNumber: variables.number,
       }),
     onSuccess: (_, variables) => {
-      queryClient.invalidateQueries({ queryKey: [PROJECT_SCENES_QUERY_KEY, variables.projectId] });
+      if (variables._id) {
+        queryClient.invalidateQueries({ queryKey: [PROJECT_SCENES_QUERY_KEY, variables._id] });
+      }
     },
   });
 
   const createSceneMutation = useMutation({
     mutationFn: async (variables: {
       _id: string;
-      number: number;
+      number?: number;
       versions: any[];
-    }) => { 
-      console.log('variables: ', variables) 
+    }) =>
       request(ENDPOINT, CREATE_SCENE, {
         _id: variables._id,
         versions: variables.versions,
         number: variables.number,
-      })},
+      }),
     onSuccess: (_, variables) => {
       if (variables._id) {
-        queryClient.invalidateQueries({ queryKey: [PROJECT_SCENES_QUERY_KEY, {_id: variables._id}] });
+        queryClient.invalidateQueries({ queryKey: [PROJECT_SCENES_QUERY_KEY, variables._id] });
       }
     },
   });

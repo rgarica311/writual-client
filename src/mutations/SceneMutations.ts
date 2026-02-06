@@ -22,7 +22,7 @@ export const CREATE_SCENE = gql`
  */
 export const UPDATE_SCENE = gql`
   mutation UpdateScene(
-    $_id String!
+    $_id: String!
     $number: Int
     $activeVersion: Int
     $newVersion: Boolean
@@ -31,7 +31,7 @@ export const UPDATE_SCENE = gql`
   ) {
     createScene(
       input: {
-        projectId: $projectId
+        _id: $_id
         number: $number
         activeVersion: $activeVersion
         newVersion: $newVersion
@@ -39,7 +39,6 @@ export const UPDATE_SCENE = gql`
         versions: $versions
       }
     ) {
-      projectId
       number
     }
   }

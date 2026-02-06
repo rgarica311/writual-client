@@ -33,8 +33,6 @@ export default function OutlinePage() {
     [id]
   );
 
-  console.log('variables: ', variables)
-
   const { data }: any = useQuery({
     queryKey: [PROJECT_SCENES_QUERY_KEY, {_id: id}],
     queryFn: () => request(endpoint, PROJECT_SCENES_QUERY, variables),
