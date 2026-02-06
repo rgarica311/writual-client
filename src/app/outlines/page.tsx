@@ -9,11 +9,15 @@ import { OUTLINE_FRAMEWORKS_QUERY } from '@/queries/OutlineQueries';
 import { UPDATE_OUTLINE_FRAMEWORK } from 'mutations/OutlineMutations';
 import { OutlineFrameworkForm, type OutlineFrameworkFormValues } from '@/components/OutlineFrameworkForm';
 import Link from 'next/link';
-import Image from 'next/image';
 import { SettingsPopover } from '@/components/SettingsPopover';
+import { AppLogo } from '@/components/AppLogo';
 
 const ENDPOINT = 'http://localhost:4000';
 const DEFAULT_USER = 'rory.garcia1@gmail.com';
+
+interface OutlineFrameworksResponse {
+  getOutlineFrameworks?: any[];
+}
 
 export default function OutlinesPage() {
   const queryClient = useQueryClient();
@@ -28,9 +32,9 @@ export default function OutlinesPage() {
   } | null>(null);
 
   const variables = React.useMemo(() => ({ user: DEFAULT_USER }), []);
-  const { data } = useQuery({
+  const { data } = useQuery<OutlineFrameworksResponse>({
     queryKey: ['outline-frameworks', DEFAULT_USER],
-    queryFn: () => request(ENDPOINT, OUTLINE_FRAMEWORKS_QUERY, variables),
+    queryFn: () => request(ENDPOINT, OUTLINE_FRAMEWORKS_QUERY, variables) as Promise<OutlineFrameworksResponse>,
   });
 
   const updateMutation = useMutation({
@@ -81,10 +85,7 @@ export default function OutlinesPage() {
           href="/projects"
           style={{ textDecoration: 'none', color: 'inherit', display: 'flex', alignItems: 'center', gap: 8 }}
         >
-          <Image src="/logo_symbol.png" alt="Writual" width={65} height={65} loading="lazy" />
-          <Typography letterSpacing={5} variant="h6" color="primary" fontSize={32}>
-            ritual
-          </Typography>
+          <AppLogo />
         </Link>
       </Container>
       <Box sx={{ position: 'fixed', bottom: 16, left: 16, zIndex: 1200 }}>

@@ -3,7 +3,7 @@ import { gql } from "graphql-request";
 export const PROJECT_CHARACTERS_QUERY = gql`
 query GetProjectCharacters($input: ProjectFilters) {
   getProjectData(input: $input) {
-    id
+    _id
     characters {
       name
       imageUrl
