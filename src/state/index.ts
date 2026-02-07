@@ -1,3 +1,4 @@
+export * from './user'
 export * from './userGeneration'
 export * from './sceneState'
 export * from './createProjectModal'

@@ -5,11 +5,43 @@ import Image from 'next/image';
 import { Box, Button, Container, Typography, useTheme } from '@mui/material';
 import { useRouter } from 'next/navigation';
 import { AppLogo } from '@/components/AppLogo';
+import { useEffect, useState } from 'react';
+import { auth } from "@/lib/firebase";
+import { GoogleAuthProvider, signInWithPopup, signOut, User } from "firebase/auth";
+import { verifyAndLogin } from './actions/auth';
+import { useUserStore } from '@/state/user';
+import GoogleIcon from '@mui/icons-material/Google';
+import '@fontsource/varela-round';
 
 
 export default function LandingPage() {
   const theme = useTheme();
   const router = useRouter();
+  const [user, setUser] = useState<User | null>(null);
+
+  const setUserStore = useUserStore((s) => s.setUser);
+
+  useEffect(() => {
+    // Listen for auth state changes
+    const unsubscribe = auth.onAuthStateChanged((user) => {
+      setUserStore(user);
+    });
+    return () => unsubscribe();
+  }, [setUserStore]);
+
+  const handleSignIn = async () => {
+    const provider = new GoogleAuthProvider();
+    try {
+      const result = await signInWithPopup(auth, provider);
+      const idToken = await result.user.getIdToken();
+      const verifyResult = await verifyAndLogin(idToken);
+      if (verifyResult && verifyResult.success) {
+        router.push('/projects');
+      }
+    } catch (error) {
+      console.error("Error signing in:", error);
+    }
+  };
 
   return (
     <Box sx={{ overflowY: 'hidden', padding: 1, display: 'flex', flexDirection: 'column', width: '100vw', minHeight: '100vh', backgroundColor: theme.palette.background.default }}>
@@ -27,23 +59,26 @@ export default function LandingPage() {
       >
         <Container maxWidth={false} disableGutters sx={{ width: '100%', minHeight: '100%', mx: 'auto' }}>
           <Box sx={{ position: 'absolute', top: 25, left: 25, display: 'flex', alignItems: 'center', gap: 1, opacity: 0.9 }}>
-            <AppLogo size={45}color='secondary' logoPath='/logo_symbol_sp.png' />
+            <AppLogo size={45}color='secondary' logoPath='/logo_original.png' />
           </Box>
 
           <Box sx={{  mt: { xs: 5, md: 7 }, textAlign: 'center' }}>
             <Typography
               variant="h2"
               sx={{
-                fontWeight: 800,
-                letterSpacing: -1,
+                fontWeight: 400,
+                fontFamily: 'Garamond',
+                letterSpacing: 3,
                 fontSize: { xs: 34, sm: 42, md: 56 },
                 lineHeight: 1.05,
               }}
             >
-              Craft Your Masterpiece.
+              Craft Your Masterpiece
             </Typography>
             <Typography
               sx={{
+                fontFamily: 'Varela Round',
+
                 mt: 1.5,
                 opacity: 0.9,
                 fontSize: { xs: 14, sm: 16, md: 18 },
@@ -75,19 +110,21 @@ export default function LandingPage() {
 
             <Typography
               variant="h4"
-              sx={{ fontWeight: 800, lineHeight: 1.05, mb: 1.5, fontSize: { xs: 28, md: 32 } }}
+              sx={{ fontFamily: 'Garamond', letterSpacing: 2, fontWeight: 800, lineHeight: 1.05, mb: 1.5, fontSize: { xs: 28, md: 32 } }}
             >
               Where Structure
               <br />
               Meets Inspiration
             </Typography>
 
-            <Typography sx={{ color: theme.palette.text.secondary, mb: 3, maxWidth: 360 }}>
+            <Typography sx={{ color: theme.palette.text.secondary, mb: 3, maxWidth: 360, fontFamily: 'Varela Round' }}>
               Capture your ideas, shape your story, and iterate with clarity—everything in one place.
             </Typography>
 
             <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1.25, maxWidth: 280 }}>
               <Button
+                onClick={handleSignIn}
+                startIcon={<GoogleIcon />}
                 variant="contained"
                 fullWidth
                 sx={{
@@ -101,29 +138,11 @@ export default function LandingPage() {
                   boxShadow: '0 8px 18px rgba(0,0,0,0.08)',
                   '&:hover': { backgroundColor: '#f5f6f7' },
                 }}
-                onClick={() => router.push('/projects')}
               >
                 Sign in with Google
               </Button>
 
-              <Button
-                variant="contained"
-                fullWidth
-                sx={{
-                  textTransform: 'none',
-                  justifyContent: 'flex-start',
-                  px: 2,
-                  py: 1.25,
-                  borderRadius: 999,
-                  backgroundColor: '#2b2b2b',
-                  color: '#fff',
-                  boxShadow: '0 8px 18px rgba(0,0,0,0.12)',
-                  '&:hover': { backgroundColor: '#1f1f1f' },
-                }}
-                onClick={() => router.push('/projects')}
-              >
-                Sign in with Apple
-              </Button>
+              
             </Box>
           </Box>
 
@@ -133,7 +152,7 @@ export default function LandingPage() {
               position: 'absolute',
               right: 100,
               bottom: 50,
-              borderRadius: 4,
+              borderRadius: 3,
               overflow: 'hidden',
               background: 'linear-gradient(180deg, #fbf6ea 0%, #f4efe4 100%)',
               border: '1px solid rgba(30, 41, 59, 0.08)',

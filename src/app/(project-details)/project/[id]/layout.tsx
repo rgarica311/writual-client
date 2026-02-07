@@ -7,6 +7,8 @@ import '@fontsource/lato/300.css'
 import '@fontsource/lato'
 import '@fontsource/lato/700.css'
 import '@fontsource/lato/900.css';
+import '@fontsource/varela-round';
+
 import { SideNavComponent } from '@/components/SideNav';
 import { useSideNavCollapsedStore } from '@/state/sideNavCollapsed';
 

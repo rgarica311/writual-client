@@ -24,7 +24,7 @@ export function AppLogo({
   return (
     <Box sx={{ display: 'flex', alignItems: 'center', }}>
       <Image src={logoPath} alt="Writual" width={size} height={size} loading={loading} />
-      <Typography letterSpacing={5} variant="h6" color={color} fontSize={fontSize}>
+      <Typography fontFamily='Varela Round' sx={{ marginLeft: 2}} letterSpacing={11} variant="h6" color={color} fontSize={fontSize}>
         ritual
       </Typography>
     </Box>

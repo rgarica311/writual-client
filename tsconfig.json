@@ -58,6 +58,9 @@
       ], 
       "@mutations/*": [
         "mutations/*"
+      ], 
+      "@/lib/*": [
+        "lib/*"
       ]
     },
     "plugins": [
@@ -75,5 +78,5 @@
     "**/*.ts",
     "**/*.tsx",
     ".next/dev/types/**/*.ts"
-  ]
+, "src/app/projects/page.tsx.old"  ]
 }
