@@ -1,0 +1,41 @@
+{
+  "name": "@writual/api",
+  "version": "1.0.0",
+  "description": "Writual Server",
+  "main": "src/index.ts",
+  "scripts": {
+    "dev": "nodemon --exec ts-node src/index.ts",
+    "build": "tsc",
+    "start": "node dist/index.js",
+    "lint": "echo \"No lint configured\"",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "",
+  "license": "ISC",
+  "devDependencies": {
+    "@babel/preset-env": "^7.20.2",
+    "@types/cors": "^2.8.13",
+    "@types/lodash": "^4.14.195",
+    "@types/node": "^18.11.18",
+    "babel-cli": "6.26.0",
+    "babel-preset-stage-0": "^6.24.1",
+    "nodemon": "^2.0.20",
+    "ts-node": "^10.9.1",
+    "tsconfig-paths": "^4.2.0",
+    "typescript": "^4.9.4"
+  },
+  "dependencies": {
+    "@apollo/server": "^4.3.0",
+    "@graphql-tools/load": "^7.8.8",
+    "@graphql-tools/schema": "^9.0.12",
+    "body-parser": "^2.2.2",
+    "cors": "^2.8.5",
+    "express": "^4.18.2",
+    "graphql": "^16.6.0",
+    "graphql-scalars": "^1.20.1",
+    "lodash": "^4.17.21",
+    "mongodb": "^4.13.0",
+    "mongoose": "^6.8.2",
+    "mongoose-sequence": "^5.3.1"
+  }
+}
